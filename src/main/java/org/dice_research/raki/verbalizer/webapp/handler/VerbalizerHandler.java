@@ -1,6 +1,6 @@
 package org.dice_research.raki.verbalizer.webapp.handler;
 
-import java.nio.file.Paths;
+import java.nio.file.Path;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -8,63 +8,32 @@ import org.dice_research.raki.verbalizer.pipeline.Pipeline;
 import org.dice_research.raki.verbalizer.pipeline.data.input.RAKIInput;
 import org.dice_research.raki.verbalizer.pipeline.data.output.IOutput;
 import org.dice_research.raki.verbalizer.pipeline.data.output.OutputJsonTrainingData;
-
-import simplenlg.lexicon.Lexicon;
+import org.json.JSONArray;
 
 public class VerbalizerHandler {
 
   protected static final Logger LOG = LogManager.getLogger(VerbalizerHandler.class);
 
-  // TODO: how to use outut Json?
-  final String output = "";
-
-  private final String axioms;
-  private final String ontology;
-
-  private VerbalizerResults verbalizerResults;
+  private final VerbalizerResults verbalizerResults = new VerbalizerResults();
 
   /**
    *
    * @param axioms
    * @param ontology
    */
-  public VerbalizerHandler(final String axioms, final String ontology) {
-    this.axioms = axioms;
-    this.ontology = ontology;
-
-    handle();
-  }
-
-  public boolean hasResults() {
-    // TODO: update me to handle errors with error messages.
-    return true;
-  }
-
-  protected void handle() {
-    _handle();
-    // TODO: call OWL2NL and init results
-    verbalizerResults = new VerbalizerResults();
-  }
-
-  protected void _handle() {
+  public VerbalizerHandler(final Path axioms, final Path ontology) {
     final RAKIInput in = new RAKIInput();
-    in//
-        .setAxioms(Paths.get(axioms))//
-        .setOntologyPath(Paths.get(ontology))//
-        .setLexicon(Lexicon.getDefaultLexicon());
+    in.setAxioms(axioms).setOntology(ontology);
 
-    final IOutput out = new OutputJsonTrainingData(Paths.get(output));
+    final IOutput<JSONArray> out = new OutputJsonTrainingData();
     // final IOutput out = new OutputTerminal();
 
-    Pipeline.getInstance().setInput(in).setOutput(out).run().getOutput();
-  }
+    Pipeline.getInstance()//
+        .setInput(new RAKIInput().setAxioms(axioms).setOntology(ontology))//
+        .setOutput(out)//
+        .run();
 
-  public String getAxioms() {
-    return axioms;
-  }
-
-  public String getOntology() {
-    return ontology;
+    verbalizerResults.setResponse(out.getResults());
   }
 
   public VerbalizerResults getVerbalizerResults() {

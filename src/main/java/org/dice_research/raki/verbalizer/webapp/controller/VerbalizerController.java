@@ -5,10 +5,12 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.Scanner;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.dice_research.raki.verbalizer.webapp.ServiceApp;
 import org.dice_research.raki.verbalizer.webapp.handler.VerbalizerHandler;
 import org.dice_research.raki.verbalizer.webapp.handler.VerbalizerResults;
 import org.springframework.http.HttpStatus;
@@ -23,42 +25,14 @@ public class VerbalizerController {
 
   protected static final Logger LOG = LogManager.getLogger(VerbalizerController.class);
 
-  VerbalizerHandler v;
+  @PostMapping("/rules")
+  public void rules() {
 
-  // TODO: use: "Reader reader = new InputStreamReader(file.getInputStream());"?
-  public String readStream(final InputStream is) throws IOException {
-    final Scanner s = new Scanner(is);
-    s.useDelimiter("\\A");
-    final String result = s.hasNext() ? s.next() : "";
-    is.close();
-    s.close();
-    return result;
   }
 
-  public String fileUpload(final MultipartFile file, final String folder) {
-    InputStream inputStream = null;
-    OutputStream outputStream = null;
-    final String fileName = file.getOriginalFilename();
-    final File newFile = new File(folder + fileName);
+  @PostMapping("/trained")
+  public void trained() {
 
-    try {
-      inputStream = file.getInputStream();
-
-      if (!newFile.exists()) {
-        newFile.createNewFile();
-      }
-      outputStream = new FileOutputStream(newFile);
-      int read = 0;
-      final byte[] bytes = new byte[1024];
-
-      while ((read = inputStream.read(bytes)) != -1) {
-        outputStream.write(bytes, 0, read);
-      }
-    } catch (final IOException e) {
-      e.printStackTrace();
-    }
-
-    return newFile.getAbsolutePath();
   }
 
   @PostMapping("/verbalize")
@@ -70,28 +44,57 @@ public class VerbalizerController {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Empty file sent.");
     }
 
-    final String defaultBaseDir = System.getProperty("java.io.tmpdir").concat("/");
-    /**
-     * <code>
-     try {
-       FileWriter myWriter = new FileWriter(defaultBaseDir.concat(axioms.getResource().getFile().getName()));
-       myWriter.write(readStream(axioms.getInputStream()));
-       myWriter.close();
-     } catch (IOException e) {
-     }
-    
-     </code>
-     */
-    final String axiomsPath = fileUpload(axioms, defaultBaseDir);
-    final String ontologyPath = fileUpload(ontology, defaultBaseDir);
-
-    final VerbalizerHandler vh = new VerbalizerHandler(//
-        axiomsPath, ontologyPath);
-    if (vh != null && vh.hasResults()) {
-      return vh.getVerbalizerResults();
+    try {
+      return _verbalize(axioms, ontology);
+    } catch (final Exception e) {
+      LOG.error(e.getLocalizedMessage(), e);
     }
-
     throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
         "Could not handle request.");
+  }
+
+  /**
+   * 
+   * @param axioms
+   * @param ontology
+   * @return
+   */
+  protected VerbalizerResults _verbalize(final MultipartFile axioms, final MultipartFile ontology) {
+    final Path axiomsPath = fileUpload(axioms, ServiceApp.tmp);
+    final Path ontologyPath = fileUpload(ontology, ServiceApp.tmp);
+
+    return new VerbalizerHandler(axiomsPath, ontologyPath).getVerbalizerResults();
+  }
+
+  protected Path fileUpload(final MultipartFile file, final Path folder) {
+
+    final Path path;
+    {
+      path = Paths.get(folder.toFile().getAbsolutePath()//
+          .concat(File.separator).concat(file.getName()));
+      if (!path.toFile().exists()) {
+        try {
+          path.toFile().createNewFile();
+          path.toFile().deleteOnExit();
+        } catch (final IOException e) {
+          LOG.error(e.getLocalizedMessage(), e);
+        }
+      }
+    }
+
+    try {
+      final InputStream in = file.getInputStream();
+      final OutputStream out = new FileOutputStream(path.toFile());
+      int read = 0;
+      final byte[] bytes = new byte[1024];
+      while ((read = in.read(bytes)) != -1) {
+        out.write(bytes, 0, read);
+      }
+      out.close();
+      in.close();
+    } catch (final IOException e) {
+      LOG.error(e.getLocalizedMessage(), e);
+    }
+    return path;
   }
 }

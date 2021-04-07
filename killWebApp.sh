@@ -1,2 +1,2 @@
-kill $(cat ./bin/shutdown.pid) 
+kill $(cat .shutdown.pid) 
  

@@ -20,7 +20,6 @@
 		<maven.compiler.target>1.8</maven.compiler.target>
 	</properties>
 	<dependencies>
-
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
@@ -34,10 +33,12 @@
 					<groupId>org.springframework.boot</groupId>
 					<artifactId>spring-boot-starter-logging</artifactId>
 				</exclusion>
+               <exclusion>
+                   <groupId>com.vaadin.external.google</groupId>
+                   <artifactId>android-json</artifactId>
+               </exclusion>
 			</exclusions>
 		</dependency>
-
-
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter</artifactId>
@@ -52,14 +53,20 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-log4j2</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-test</artifactId>
+			<exclusions>
+				<exclusion>
+					<groupId>org.springframework.boot</groupId>
+					<artifactId>spring-boot-starter-logging</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
 
-<dependency>
-    <groupId>org.springframework</groupId>
-    <artifactId>spring-test</artifactId>
-    <version>5.3.3</version>
-</dependency>
-
-
+		<!-- <dependency> <groupId>org.junit.vintage</groupId> <artifactId>junit-vintage-engine</artifactId> 
+			<scope>test</scope> <exclusions> <exclusion> <groupId>org.hamcrest</groupId> 
+			<artifactId>hamcrest-core</artifactId> </exclusion> </exclusions> </dependency> -->
 
 		<dependency>
 			<groupId>org.dice-research</groupId>
