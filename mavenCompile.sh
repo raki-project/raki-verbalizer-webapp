@@ -1,2 +1,2 @@
 
-mvn -T 4 clean compile -am 
+mvn -T 4 clean compile -am -DskipTests
