@@ -121,7 +121,7 @@
 		<repository>
 			<id>Apache Repo Central 1</id>
 			<name>Apache Repository 1</name>
-			<url>https://repo1.maven.apache.org/maven2</url>
+			<url>https://repo1.maven.org/maven2</url>
 		</repository>
 		<repository>
 			<id>Apache Repo Central</id>
@@ -162,7 +162,7 @@
 	<pluginRepository>
 			<id>Apache Repo Central 1</id>
 			<name>Apache Repository 1</name>
-			<url>https://repo1.maven.apache.org/maven2</url>
+			<url>https://repo1.maven.org/maven2</url>
 		</pluginRepository>
 		<pluginRepository>
 			<id>Apache Repo Central</id>
