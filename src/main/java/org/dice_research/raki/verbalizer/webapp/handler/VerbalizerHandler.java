@@ -14,7 +14,9 @@ public class VerbalizerHandler {
 
   protected static final Logger LOG = LogManager.getLogger(VerbalizerHandler.class);
 
-  private final VerbalizerResults verbalizerResults = new VerbalizerResults();
+  private VerbalizerResults verbalizerResults = null;
+  private RAKIInput in = null;
+  private IOutput<JSONArray> out = null;
 
   /**
    *
@@ -22,21 +24,33 @@ public class VerbalizerHandler {
    * @param ontology
    */
   public VerbalizerHandler(final Path axioms, final Path ontology) {
-    final RAKIInput in = new RAKIInput();
+    verbalizerResults = new VerbalizerResults();
+    in = new RAKIInput();
     in.setAxioms(axioms).setOntology(ontology);
 
-    final IOutput<JSONArray> out = new OutputJsonTrainingData();
-    // final IOutput out = new OutputTerminal();
-
-    Pipeline.getInstance()//
-        .setInput(new RAKIInput().setAxioms(axioms).setOntology(ontology))//
-        .setOutput(out)//
-        .run();
-
-    verbalizerResults.setResponse(out.getResults());
+    out = new OutputJsonTrainingData();
+    // out = new OutputTerminal();
   }
 
   public VerbalizerResults getVerbalizerResults() {
     return verbalizerResults;
+  }
+
+  protected VerbalizerHandler run(final RAKIInput.Type type) {
+    in.setType(type);
+    Pipeline.getInstance()//
+        .setInput(in)//
+        .setOutput(out)//
+        .run();
+    verbalizerResults.setResponse(out.getResults());
+    return this;
+  }
+
+  public VerbalizerHandler runsRules() {
+    return run(RAKIInput.Type.RULES);
+  }
+
+  public VerbalizerHandler runsModel() {
+    return run(RAKIInput.Type.MODEL);
   }
 }

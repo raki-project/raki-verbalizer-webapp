@@ -32,7 +32,7 @@ public class ApplicationTests {
       final MultipartFile ontology = new MockMultipartFile(ontologyPath.toFile().getPath(),
           new FileInputStream(ontologyPath.toFile()));
 
-      final VerbalizerResults results = ctlr.verbalize(axioms, ontology);
+      final VerbalizerResults results = ctlr.rules(axioms, ontology);
 
       assertTrue(results.response.size() > 0);
       assertTrue(results.response.size() == 36);

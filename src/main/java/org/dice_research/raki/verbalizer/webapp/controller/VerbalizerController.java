@@ -25,16 +25,6 @@ public class VerbalizerController {
 
   protected static final Logger LOG = LogManager.getLogger(VerbalizerController.class);
 
-  @PostMapping("/rules")
-  public void rules() {
-
-  }
-
-  @PostMapping("/trained")
-  public void trained() {
-
-  }
-
   @PostMapping("/verbalize")
   public VerbalizerResults verbalize(//
       @RequestParam(value = "axioms") final MultipartFile axioms, //
@@ -43,9 +33,13 @@ public class VerbalizerController {
     if (axioms == null || axioms.isEmpty() || ontology == null || ontology.isEmpty()) {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Empty file sent.");
     }
-
     try {
-      return _verbalize(axioms, ontology);
+      return new VerbalizerHandler(//
+          fileUpload(axioms, ServiceApp.tmp), //
+          fileUpload(ontology, ServiceApp.tmp)//
+      )//
+          .runsModel()//
+          .getVerbalizerResults();
     } catch (final Exception e) {
       LOG.error(e.getLocalizedMessage(), e);
     }
@@ -54,20 +48,42 @@ public class VerbalizerController {
   }
 
   /**
-   * 
-   * @param axioms
-   * @param ontology
-   * @return
+   * Runs the rule base algorithm.
+   *
+   * @param axioms files
+   * @param ontology files
+   * @return VerbalizerResults
    */
-  protected VerbalizerResults _verbalize(final MultipartFile axioms, final MultipartFile ontology) {
-    final Path axiomsPath = fileUpload(axioms, ServiceApp.tmp);
-    final Path ontologyPath = fileUpload(ontology, ServiceApp.tmp);
+  @PostMapping("/rules")
+  public VerbalizerResults rules(//
+      @RequestParam(value = "axioms") final MultipartFile axioms, //
+      @RequestParam(value = "ontology") final MultipartFile ontology) {
+    if (axioms == null || axioms.isEmpty() || ontology == null || ontology.isEmpty()) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Empty file sent.");
+    }
+    try {
+      return new VerbalizerHandler(//
+          fileUpload(axioms, ServiceApp.tmp), //
+          fileUpload(ontology, ServiceApp.tmp)//
+      )//
+          .runsRules()//
+          .getVerbalizerResults();
 
-    return new VerbalizerHandler(axiomsPath, ontologyPath).getVerbalizerResults();
+    } catch (final Exception e) {
+      LOG.error(e.getLocalizedMessage(), e);
+    }
+    throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+        "Could not handle request.");
   }
 
+  /**
+   * Uploads the given file to the given folder.
+   *
+   * @param file
+   * @param folder
+   * @return Path of the stored file
+   */
   protected Path fileUpload(final MultipartFile file, final Path folder) {
-
     final Path path;
     {
       path = Paths.get(folder.toFile().getAbsolutePath()//
