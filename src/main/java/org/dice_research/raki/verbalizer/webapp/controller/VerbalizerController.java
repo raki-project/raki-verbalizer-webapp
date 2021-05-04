@@ -68,9 +68,10 @@ public class VerbalizerController {
         drillResponse = result.toString();
 
       } else {
+        LOG.info(request.toString());
+        LOG.info(response.toString());
         throw new ResponseStatusException(
-            HttpStatus.resolve(response.getStatusLine().getStatusCode()),
-            "Could not handle request.");
+            HttpStatus.resolve(response.getStatusLine().getStatusCode()), response.toString());
       }
     } catch (final Exception e) {
       LOG.error(e.getLocalizedMessage(), e);
