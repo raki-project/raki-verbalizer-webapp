@@ -30,8 +30,8 @@ public class VerbalizerController {
 
   protected static final Logger LOG = LogManager.getLogger(VerbalizerController.class);
 
-  public static String DRILL = "http://localhost:9080/concept_learning";
-  public static String VERB = "http://localhost:9081/verbalize";
+  public static String DRILL = "http://drill:9080/concept_learning";
+  // public static String VERB = "http://127.0.0.1:9081/verbalize";
 
   @PostMapping("/raki")
   public VerbalizerResults raki(//
