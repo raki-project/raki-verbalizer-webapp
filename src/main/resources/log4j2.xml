@@ -6,18 +6,10 @@
 				<pattern>%c{12} %d{dd/MMM/yyyyHH:mm:ss} %5p [%t] (%F:%M:%L) - %m%n </pattern>
 			</PatternLayout>
 		</Console>
-    <File name="MyFile" fileName="app.log">
-			<PatternLayout>
-				<pattern>%c{12} %d{dd/MMM/yyyyHH:mm:ss} %5p [%t] (%F:%M:%L) - %m%n </pattern>
-			</PatternLayout>
-    </File>
-    <Async name="Async">
-      <AppenderRef ref="MyFile"/>
-    </Async>
 	</Appenders>
 	<Loggers>
 		<Root level="INFO">
-			<AppenderRef ref="Async" />
+			<AppenderRef ref="Console" />
 		</Root>
 		<Logger name="org.dice_research.raki.verbalizer.webapp" level="DEBUG" />
 	</Loggers>
