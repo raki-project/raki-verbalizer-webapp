@@ -79,6 +79,9 @@ public class VerbalizerController {
 
     if (drillResponse != null) {
 
+      final PrePro p = new PrePro();
+      drillResponse = p.documentToString(p.removeImports(drillResponse));
+
       final Path path = Paths.get(ServiceApp.tmp.toFile().getAbsolutePath()//
           .concat(File.separator)//
           .concat(String.valueOf(new Timestamp(System.currentTimeMillis()).getTime()))//
