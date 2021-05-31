@@ -2,7 +2,6 @@ package org.dice_research.raki.verbalizer.webapp.handler;
 
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.Map;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -34,7 +33,7 @@ public class InfoHandler {
   /**
    * Names of the trained models.
    */
-  public Map<String, String> modelNamesToOntologyIRI;
+  // public Map<String, String> modelNamesToOntologyIRI;
 
   public InfoHandler() {
     // initializes version

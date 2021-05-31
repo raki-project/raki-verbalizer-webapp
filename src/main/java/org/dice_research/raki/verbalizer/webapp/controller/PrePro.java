@@ -22,10 +22,29 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
+/**
+ * Helper class to remove imported ontologies within an ontology since we don't want to verbalize
+ * those imports.
+ *
+ * @author rspeck
+ *
+ */
 public class PrePro {
   protected static final Logger LOG = LogManager.getLogger(PrePro.class);
 
-  public Document removeImports(final Document doc) {
+  public String getWithoutImports(final Path xml) throws FileNotFoundException {
+    return documentToString(removeImports(xml));
+  }
+
+  public String getWithoutImports(final String xml) {
+    return documentToString(removeImports(xml));
+  }
+
+  public String getWithoutImports(final InputSource xml) {
+    return documentToString(removeImports(xml));
+  }
+
+  protected Document removeImports(final Document doc) {
     final String t = "owl:Ontology";
     while (doc.getElementsByTagName(t).getLength() > 0) {
       final NodeList nodeList = doc.getElementsByTagName(t);
@@ -38,7 +57,7 @@ public class PrePro {
     return doc;
   }
 
-  public String documentToString(final Document doc) {
+  protected String documentToString(final Document doc) {
     try {
       final StringWriter writer = new StringWriter();
       TransformerFactory.newInstance().newTransformer()//
@@ -51,7 +70,7 @@ public class PrePro {
     }
   }
 
-  public Document removeImports(final InputSource is) {
+  protected Document removeImports(final InputSource is) {
     try {
       return removeImports(DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(is));
     } catch (ParserConfigurationException | SAXException | IOException e) {
@@ -60,12 +79,11 @@ public class PrePro {
     }
   }
 
-  public Document removeImports(final String xml) {
+  protected Document removeImports(final String xml) {
     return removeImports(new InputSource(new StringReader(xml)));
   }
 
-  public Document removeImports(final Path file) throws FileNotFoundException {
+  protected Document removeImports(final Path file) throws FileNotFoundException {
     return removeImports(new InputSource(new FileInputStream(file.toFile().getAbsolutePath())));
   }
-
 }

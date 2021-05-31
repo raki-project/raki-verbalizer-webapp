@@ -27,7 +27,6 @@ public class VerbalizerResults {
         response.add(ja.getJSONObject(i).toMap());
       }
     }
-    LOG.info("=====");
   }
 
   @Override

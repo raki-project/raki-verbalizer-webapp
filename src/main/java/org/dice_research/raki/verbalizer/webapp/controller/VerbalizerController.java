@@ -15,7 +15,7 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.dice_research.raki.verbalizer.pipeline.io.RakiIO;
-import org.dice_research.raki.verbalizer.webapp.ServiceApp;
+import org.dice_research.raki.verbalizer.webapp.Const;
 import org.dice_research.raki.verbalizer.webapp.handler.VerbalizerHandler;
 import org.dice_research.raki.verbalizer.webapp.handler.VerbalizerResults;
 import org.springframework.http.HttpStatus;
@@ -30,9 +30,6 @@ public class VerbalizerController {
 
   protected static final Logger LOG = LogManager.getLogger(VerbalizerController.class);
 
-  public static String DRILL = "http://drill:9080/concept_learning";
-  // public static String VERB = "http://127.0.0.1:9081/verbalize";
-
   @PostMapping("/raki")
   public VerbalizerResults raki(//
       @RequestParam(value = "input") final MultipartFile input, //
@@ -45,9 +42,9 @@ public class VerbalizerController {
     // http drill
     String drillResponse = null;
     try {
-      final Path file = fileUpload(input, ServiceApp.tmp); //
+      final Path file = fileUpload(input, Const.tmp); //
 
-      final HttpPost request = new HttpPost(DRILL);
+      final HttpPost request = new HttpPost(Const.DRILL);
       request.setEntity(new FileEntity(file.toFile()));
 
       final HttpResponse response = HttpClientBuilder.create()//
@@ -78,11 +75,9 @@ public class VerbalizerController {
     }
 
     if (drillResponse != null) {
+      drillResponse = new PrePro().getWithoutImports(drillResponse);
 
-      final PrePro p = new PrePro();
-      drillResponse = p.documentToString(p.removeImports(drillResponse));
-
-      final Path path = Paths.get(ServiceApp.tmp.toFile().getAbsolutePath()//
+      final Path path = Paths.get(Const.tmp.toFile().getAbsolutePath()//
           .concat(File.separator)//
           .concat(String.valueOf(new Timestamp(System.currentTimeMillis()).getTime()))//
           .concat("_concept_learning"));//
@@ -92,7 +87,7 @@ public class VerbalizerController {
       // http verbalizer
       return new VerbalizerHandler(//
           path, //
-          fileUpload(ontology, ServiceApp.tmp)//
+          fileUpload(ontology, Const.tmp)//
       )//
           .runsModel()//
           .getVerbalizerResults();
@@ -112,8 +107,8 @@ public class VerbalizerController {
     }
     try {
       return new VerbalizerHandler(//
-          fileUpload(axioms, ServiceApp.tmp), //
-          fileUpload(ontology, ServiceApp.tmp)//
+          fileUpload(axioms, Const.tmp), //
+          fileUpload(ontology, Const.tmp)//
       )//
           .runsModel()//
           .getVerbalizerResults();
@@ -140,8 +135,8 @@ public class VerbalizerController {
     }
     try {
       return new VerbalizerHandler(//
-          fileUpload(axioms, ServiceApp.tmp), //
-          fileUpload(ontology, ServiceApp.tmp)//
+          fileUpload(axioms, Const.tmp), //
+          fileUpload(ontology, Const.tmp)//
       )//
           .runsRules()//
           .getVerbalizerResults();
