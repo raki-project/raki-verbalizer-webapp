@@ -7,4 +7,4 @@ curl \
 	-F axioms=$axioms \
 	-H "charset=utf-8" \
 	-o $response \
-	http://localhost:4443/verbalize  > $0.log 2>&1 </dev/null &
+	http://localhost:9081/verbalize  > $0.log 2>&1 </dev/null &
