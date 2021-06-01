@@ -20,10 +20,7 @@ public class VerbalizerResults {
   public void setResponse(final JSONArray ja) {
     response = new HashSet<>();
     if (ja != null && !ja.isEmpty()) {
-
-      LOG.info(ja);
       for (int i = 0; i < ja.length(); i++) {
-        LOG.info(ja.getJSONObject(i).toString(2));
         response.add(ja.getJSONObject(i).toMap());
       }
     }
