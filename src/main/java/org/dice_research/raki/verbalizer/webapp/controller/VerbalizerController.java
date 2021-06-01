@@ -72,7 +72,7 @@ public class VerbalizerController {
   public VerbalizerResults raki(//
       @RequestParam(value = "input") final MultipartFile input, //
       @RequestParam(value = "ontology") final MultipartFile ontology,
-      @RequestParam(defaultValue = "model") final String type) {
+      @RequestParam(defaultValue = "rules") final String type) {
 
     if (input == null || input.isEmpty() || ontology == null || ontology.isEmpty()) {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Empty file sent.");
