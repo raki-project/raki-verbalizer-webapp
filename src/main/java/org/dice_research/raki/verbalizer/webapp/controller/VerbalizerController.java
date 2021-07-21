@@ -30,15 +30,7 @@ public class VerbalizerController {
 
   protected static final Logger LOG = LogManager.getLogger(VerbalizerController.class);
 
-  @PostMapping("/raki")
-  public VerbalizerResults raki(//
-      @RequestParam(value = "input") final MultipartFile input, //
-      @RequestParam(value = "ontology") final MultipartFile ontology) {
-
-    if (input == null || input.isEmpty() || ontology == null || ontology.isEmpty()) {
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Empty file sent.");
-    }
-
+  protected String requestDrill(final MultipartFile input) {
     // http drill
     String drillResponse = null;
     try {
@@ -73,6 +65,20 @@ public class VerbalizerController {
     } catch (final Exception e) {
       LOG.error(e.getLocalizedMessage(), e);
     }
+    return drillResponse;
+  }
+
+  @PostMapping("/raki")
+  public VerbalizerResults raki(//
+      @RequestParam(value = "input") final MultipartFile input, //
+      @RequestParam(value = "ontology") final MultipartFile ontology,
+      @RequestParam(defaultValue = "rules") final String type) {
+
+    if (input == null || input.isEmpty() || ontology == null || ontology.isEmpty()) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Empty file sent.");
+    }
+
+    String drillResponse = requestDrill(input);
 
     if (drillResponse != null) {
       drillResponse = new PrePro().getWithoutImports(drillResponse);
@@ -84,13 +90,21 @@ public class VerbalizerController {
 
       RakiIO.write(path, drillResponse.getBytes());
 
-      // http verbalizer
-      return new VerbalizerHandler(//
-          path, //
-          fileUpload(ontology, Const.tmp)//
-      )//
-          .runsModel()//
-          .getVerbalizerResults();
+      if (type.equals("model")) {
+        return new VerbalizerHandler(//
+            path, //
+            fileUpload(ontology, Const.tmp)//
+        )//
+            .runsModel()//
+            .getVerbalizerResults();
+      } else if (type.equals("rules")) {
+        return new VerbalizerHandler(//
+            path, //
+            fileUpload(ontology, Const.tmp)//
+        )//
+            .runsRules()//
+            .getVerbalizerResults();
+      }
     }
 
     throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
@@ -144,7 +158,8 @@ public class VerbalizerController {
     } catch (final Exception e) {
       LOG.error(e.getLocalizedMessage(), e);
     }
-    throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+    throw new ResponseStatusException(//
+        HttpStatus.INTERNAL_SERVER_ERROR, //
         "Could not handle request.");
   }
 
@@ -163,15 +178,12 @@ public class VerbalizerController {
         .concat(String.valueOf(new Timestamp(System.currentTimeMillis()).getTime()))//
         .concat("_")//
         .concat(file.getOriginalFilename()));
-
-    // if (!path.toFile().exists()) {
     try {
       file.transferTo(path.toFile());
       path.toFile().deleteOnExit();
     } catch (final IOException e) {
       LOG.error(e.getLocalizedMessage(), e);
     }
-    // }
     return path;
   }
 }
