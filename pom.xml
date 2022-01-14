@@ -18,6 +18,7 @@
 		<compiler.version>1.8</compiler.version>
 		<maven.compiler.source>1.8</maven.compiler.source>
 		<maven.compiler.target>1.8</maven.compiler.target>
+		<ld2nl.version>0.4.2-SNAPSHOT</ld2nl.version>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -33,10 +34,10 @@
 					<groupId>org.springframework.boot</groupId>
 					<artifactId>spring-boot-starter-logging</artifactId>
 				</exclusion>
-               <exclusion>
-                   <groupId>com.vaadin.external.google</groupId>
-                   <artifactId>android-json</artifactId>
-               </exclusion>
+				<exclusion>
+					<groupId>com.vaadin.external.google</groupId>
+					<artifactId>android-json</artifactId>
+				</exclusion>
 			</exclusions>
 		</dependency>
 		<dependency>
@@ -64,7 +65,7 @@
 			</exclusions>
 		</dependency>
 		<dependency>
-			<groupId>org.dice-research</groupId>
+			<groupId>de.raki-projekt</groupId>
 			<artifactId>raki-verbalizer-pipeline</artifactId>
 			<version>0.0.2-SNAPSHOT</version>
 			<exclusions>
@@ -81,7 +82,7 @@
 		<dependency>
 			<groupId>org.dice-research</groupId>
 			<artifactId>triple2nl</artifactId>
-			<version>0.4.1-SNAPSHOT</version>
+			<version>${ld2nl.version}</version>
 			<exclusions>
 				<exclusion>
 					<groupId>org.slf4j</groupId>
@@ -96,7 +97,7 @@
 		<dependency>
 			<groupId>org.dice-research</groupId>
 			<artifactId>owl2nl</artifactId>
-			<version>0.4.1-SNAPSHOT</version>
+			<version>${ld2nl.version}</version>
 			<exclusions>
 				<exclusion>
 					<groupId>org.slf4j</groupId>
@@ -108,12 +109,12 @@
 				</exclusion>
 			</exclusions>
 		</dependency>
-<dependency>
-    <groupId>org.apache.httpcomponents</groupId>
-    <artifactId>httpmime</artifactId>
-    <version>4.5.13</version>
-</dependency>
-		
+		<dependency>
+			<groupId>org.apache.httpcomponents</groupId>
+			<artifactId>httpmime</artifactId>
+			<version>4.5.13</version>
+		</dependency>
+
 	</dependencies>
 	<build>
 		<plugins>
@@ -144,7 +145,9 @@
 			<id>maven.aksw.snapshots</id>
 			<name>University Leipzig, AKSW Maven2 Repository</name>
 			<url>https://maven.aksw.org/archiva/repository/snapshots</url>
-			<releases><enabled>true</enabled></releases>
+			<releases>
+				<enabled>true</enabled>
+			</releases>
 			<snapshots>
 				<enabled>false</enabled>
 			</snapshots>
@@ -158,14 +161,16 @@
 			<id>spring-snapshots</id>
 			<name>Spring Snapshots</name>
 			<url>https://repo.spring.io/snapshot</url>
-			<releases><enabled>true</enabled></releases>
+			<releases>
+				<enabled>true</enabled>
+			</releases>
 			<snapshots>
 				<enabled>false</enabled>
 			</snapshots>
 		</repository>
 	</repositories>
 	<pluginRepositories>
-	<pluginRepository>
+		<pluginRepository>
 			<id>Apache Repo Central 1</id>
 			<name>Apache Repository 1</name>
 			<url>https://repo1.maven.org/maven2</url>
@@ -184,7 +189,9 @@
 			<id>spring-snapshots</id>
 			<name>Spring Snapshots</name>
 			<url>https://repo.spring.io/snapshot</url>
-			<releases><enabled>true</enabled></releases>
+			<releases>
+				<enabled>true</enabled>
+			</releases>
 			<snapshots>
 				<enabled>false</enabled>
 			</snapshots>
