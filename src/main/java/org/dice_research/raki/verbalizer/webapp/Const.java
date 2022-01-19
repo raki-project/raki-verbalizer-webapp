@@ -22,4 +22,7 @@ public class Const {
 
   public static String DRILL = "http://drill:9080/concept_learning";
   // public static String VERB = "http://127.0.0.1:9081/verbalize";
+
+  public static String staticFilesFolder = "/static";
+  public static String staticFilesFolderOntology = "/static/ontology";
 }
