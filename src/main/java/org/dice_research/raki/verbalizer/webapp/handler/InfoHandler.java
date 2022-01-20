@@ -4,7 +4,9 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.collections15.map.HashedMap;
 import org.apache.logging.log4j.LogManager;
@@ -26,41 +28,41 @@ public class InfoHandler {
   protected static final Logger LOG = LogManager.getLogger(InfoHandler.class);
 
   /**
-   * The raki verbalizer webapp version.
    */
-  public String version = "n/a";
+  public Set<Map<String, String>> version = new HashSet<>();
 
   /**
    */
-  public Map<String, String> ontology = new HashedMap<>();
-
-  /**
-   * Names of the trained models.
-   */
-  // public Set<String> modelNames;
-
-  /**
-   * Names of the trained models.
-   */
-  // public Map<String, String> modelNamesToOntologyIRI;
+  public Set<Map<String, String>> ontology = new HashSet<>();
 
   public InfoHandler() {
-    // initializes version
+    // initializes versions
     try {
       final MavenXpp3Reader reader = new MavenXpp3Reader();
       final Model model = reader.read(new FileReader("pom.xml"));
-      version = model.getVersion();
+      final Map<String, String> element = new HashedMap<>();
+      element.put("name", model.getName());
+      element.put("version", model.getVersion());
+      version.add(element);
+
     } catch (IOException | XmlPullParserException e) {
       LOG.error(e.getLocalizedMessage(), e);
     }
 
     // initializes list of files in resources
     try {
-      for (final File file : new File(
-          getClass().getResource(Const.staticFilesFolderOntology).toURI()).listFiles()) {
-        ontology.put(file.getName(), file.getPath());
+      for (final File file : new File(getClass()//
+          .getResource(Const.staticFilesFolderOntology)//
+          .toURI()).listFiles()) {
+
+        final Map<String, String> element = new HashedMap<>();
+        element.put("name", file.getName());
+        element.put("path", file.getPath());
+        ontology.add(element);
       }
-    } catch (final URISyntaxException e) {
+    } catch (
+
+    final URISyntaxException e) {
       LOG.error(e.getLocalizedMessage(), e);
     }
   }
