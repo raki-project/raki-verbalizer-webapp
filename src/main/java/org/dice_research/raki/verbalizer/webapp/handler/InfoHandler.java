@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.collections15.map.HashedMap;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.maven.model.Model;
@@ -49,21 +50,34 @@ public class InfoHandler {
       LOG.error(e.getLocalizedMessage(), e);
     }
 
-    // initializes list of files in resources
+    // initializes owl files
+    ontology.addAll(getFiles(Const.staticFilesFolderOntology));
+  }
+
+  /**
+   * Gets all files with the "owl" file extension in the given and all sub directories.
+   *
+   * @return file name and path
+   */
+  protected Set<Map<String, String>> getFiles(final String name) {
+    final Set<Map<String, String>> ontology = new HashSet<>();
+    LOG.info(name);
     try {
       for (final File file : new File(getClass()//
-          .getResource(Const.staticFilesFolderOntology)//
+          .getResource(name)//
           .toURI()).listFiles()) {
-
-        final Map<String, String> element = new HashedMap<>();
-        element.put("name", file.getName());
-        element.put("path", file.getPath());
-        ontology.add(element);
+        if (file.isDirectory()) {
+          ontology.addAll(getFiles(name.concat("/").concat(file.getName())));
+        } else if ("owl".equals(FilenameUtils.getExtension(file.getName()))) {
+          final Map<String, String> element = new HashedMap<>();
+          element.put("name", file.getName());
+          element.put("path", file.getPath());
+          ontology.add(element);
+        }
       }
-    } catch (
-
-    final URISyntaxException e) {
+    } catch (final URISyntaxException e) {
       LOG.error(e.getLocalizedMessage(), e);
     }
+    return ontology;
   }
 }
