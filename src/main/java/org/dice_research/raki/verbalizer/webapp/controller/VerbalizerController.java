@@ -19,6 +19,7 @@ import org.dice_research.raki.verbalizer.webapp.Const;
 import org.dice_research.raki.verbalizer.webapp.handler.VerbalizerHandler;
 import org.dice_research.raki.verbalizer.webapp.handler.VerbalizerResults;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -29,6 +30,25 @@ import org.springframework.web.server.ResponseStatusException;
 public class VerbalizerController {
 
   protected static final Logger LOG = LogManager.getLogger(VerbalizerController.class);
+
+  @PostMapping("/feedback")
+  public ResponseEntity<String> feedback(
+      @RequestParam(value = "feedback") final MultipartFile feedback) {
+
+    if (feedback == null || feedback.isEmpty()) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Empty file sent.");
+    } else {
+      // TODO
+
+      final Path e = fileUpload(feedback, Const.tmp);
+
+      return ResponseEntity.ok(e.getFileName().toString());// .build();
+      // OR ResponseEntity.ok("body goes here");
+    }
+
+    // throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,"Could not handle
+    // request.");
+  }
 
   protected String requestDrill(final MultipartFile input) {
     // http drill
