@@ -2,11 +2,13 @@ package org.dice_research.raki.verbalizer.webapp.controller;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.Timestamp;
+import java.util.Arrays;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpPost;
@@ -14,12 +16,15 @@ import org.apache.http.entity.FileEntity;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.dice_research.raki.verbalizer.pipeline.data.input.RAKIInput;
 import org.dice_research.raki.verbalizer.pipeline.io.RakiIO;
-import org.dice_research.raki.verbalizer.webapp.Const;
+import org.dice_research.raki.verbalizer.webapp.ServiceApp;
 import org.dice_research.raki.verbalizer.webapp.handler.VerbalizerHandler;
 import org.dice_research.raki.verbalizer.webapp.handler.VerbalizerResults;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -31,6 +36,9 @@ public class VerbalizerController {
 
   protected static final Logger LOG = LogManager.getLogger(VerbalizerController.class);
 
+  @Value("${drill.endpoint}")
+  private String drillEndpoint;
+
   @PostMapping("/feedback")
   public ResponseEntity<String> feedback(
       @RequestParam(value = "feedback") final MultipartFile feedback) {
@@ -38,25 +46,20 @@ public class VerbalizerController {
     if (feedback == null || feedback.isEmpty()) {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Empty file sent.");
     } else {
-      // TODO
 
-      final Path e = fileUpload(feedback, Const.tmp);
+      final Path e = fileUpload(feedback, ServiceApp.tmp);
 
       return ResponseEntity.ok(e.getFileName().toString());// .build();
       // OR ResponseEntity.ok("body goes here");
     }
-
-    // throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,"Could not handle
-    // request.");
   }
 
-  protected String requestDrill(final MultipartFile input) {
-    // http drill
+  private String requestDrill(final MultipartFile input) {
     String drillResponse = null;
     try {
-      final Path file = fileUpload(input, Const.tmp); //
+      final Path file = fileUpload(input, ServiceApp.tmp); //
 
-      final HttpPost request = new HttpPost(Const.DRILL);
+      final HttpPost request = new HttpPost(drillEndpoint);
       request.setEntity(new FileEntity(file.toFile()));
 
       final HttpResponse response = HttpClientBuilder.create()//
@@ -77,8 +80,8 @@ public class VerbalizerController {
         drillResponse = result.toString();
 
       } else {
-        LOG.info(request.toString());
-        LOG.info(response.toString());
+        LOG.error(request.toString());
+        LOG.error(response.toString());
         throw new ResponseStatusException(
             HttpStatus.resolve(response.getStatusLine().getStatusCode()), response.toString());
       }
@@ -90,67 +93,31 @@ public class VerbalizerController {
 
   @PostMapping("/raki")
   public VerbalizerResults raki(//
-      @RequestParam(value = "input") final MultipartFile input, //
+      @RequestParam(value = "input") final MultipartFile axioms, //
       @RequestParam(value = "ontology") final MultipartFile ontology,
       @RequestParam(defaultValue = "rules") final String type) {
 
-    if (input == null || input.isEmpty() || ontology == null || ontology.isEmpty()) {
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Empty file sent.");
-    }
+    if (checksParams(axioms, ontology, type)) {
 
-    String drillResponse = requestDrill(input);
+      String drillResponse = requestDrill(axioms);
 
-    if (drillResponse != null) {
-      drillResponse = new PrePro().getWithoutImports(drillResponse);
+      if (drillResponse != null) {
+        drillResponse = new PrePro().getWithoutImports(drillResponse);
 
-      final Path path = Paths.get(Const.tmp.toFile().getAbsolutePath()//
-          .concat(File.separator)//
-          .concat(String.valueOf(new Timestamp(System.currentTimeMillis()).getTime()))//
-          .concat("_concept_learning"));//
+        final Path path = Paths.get(ServiceApp.tmp.toFile().getAbsolutePath()//
+            .concat(File.separator)//
+            .concat(String.valueOf(new Timestamp(System.currentTimeMillis()).getTime()))//
+            .concat("_concept_learning"));//
 
-      RakiIO.write(path, drillResponse.getBytes());
+        RakiIO.write(path, drillResponse.getBytes());
 
-      if (type.equals("model")) {
-        return new VerbalizerHandler(//
-            path, //
-            fileUpload(ontology, Const.tmp)//
-        )//
-            .runsModel()//
-            .getVerbalizerResults();
-      } else if (type.equals("rules")) {
-        return new VerbalizerHandler(//
-            path, //
-            fileUpload(ontology, Const.tmp)//
-        )//
-            .runsRules()//
-            .getVerbalizerResults();
+        return VerbalizerHandler.getVerbalizerResults(//
+            path, fileUpload(ontology, ServiceApp.tmp), RAKIInput.Type.valueOf(type)//
+        );
       }
     }
-
-    throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
-        "Could not handle request.");
-  }
-
-  @PostMapping("/verbalize")
-  public VerbalizerResults verbalize(//
-      @RequestParam(value = "axioms") final MultipartFile axioms, //
-      @RequestParam(value = "ontology") final MultipartFile ontology) {
-
-    if (axioms == null || axioms.isEmpty() || ontology == null || ontology.isEmpty()) {
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Empty file sent.");
-    }
-    try {
-      return new VerbalizerHandler(//
-          fileUpload(axioms, Const.tmp), //
-          fileUpload(ontology, Const.tmp)//
-      )//
-          .runsModel()//
-          .getVerbalizerResults();
-    } catch (final Exception e) {
-      LOG.error(e.getLocalizedMessage(), e);
-    }
-    throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
-        "Could not handle request.");
+    throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+        "Some parameters are missing or wrong. Read the documentation.");
   }
 
   /**
@@ -164,23 +131,62 @@ public class VerbalizerController {
   public VerbalizerResults rules(//
       @RequestParam(value = "axioms") final MultipartFile axioms, //
       @RequestParam(value = "ontology") final MultipartFile ontology) {
-    if (axioms == null || axioms.isEmpty() || ontology == null || ontology.isEmpty()) {
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Empty file sent.");
-    }
-    try {
-      return new VerbalizerHandler(//
-          fileUpload(axioms, Const.tmp), //
-          fileUpload(ontology, Const.tmp)//
-      )//
-          .runsRules()//
-          .getVerbalizerResults();
+    return verbalizer(axioms, ontology, RAKIInput.Type.RULES.name());
+  }
 
-    } catch (final Exception e) {
+  /**
+   * Runs the nn base algorithm.
+   *
+   * @param axioms files
+   * @param ontology files
+   * @return VerbalizerResults
+   */
+  @PostMapping("/verbalize")
+  public VerbalizerResults verbalize(//
+      @RequestParam(value = "axioms") final MultipartFile axioms, //
+      @RequestParam(value = "ontology") final MultipartFile ontology) {
+    return verbalizer(axioms, ontology, RAKIInput.Type.MODEL.name());
+  }
+
+  private boolean checksParams(final MultipartFile axioms, final MultipartFile ontology,
+      final String type) {
+    // checks inputs
+    if (axioms == null || axioms.isEmpty() || ontology == null || ontology.isEmpty() || type == null
+        || !Arrays.asList(RAKIInput.Type.values()).contains(RAKIInput.Type.valueOf(type))) {
+      return false;
+    } else {
+      return true;
+    }
+  }
+
+  private VerbalizerResults verbalizer(final MultipartFile axioms, final MultipartFile ontology,
+      final String type) {
+
+    if (checksParams(axioms, ontology, type)) {
+      try {
+        final MultipartFile ontologyWithoutImports = removeImports(ontology);
+        return VerbalizerHandler.getVerbalizerResults(//
+            fileUpload(axioms, ServiceApp.tmp), //
+            fileUpload(ontologyWithoutImports, ServiceApp.tmp), //
+            RAKIInput.Type.valueOf(type)//
+        );
+      } catch (final Exception e) {
+        LOG.error(e.getLocalizedMessage(), e);
+      }
+    }
+    throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+        "Some parameters are missing or wrong. Read the documentation.");
+  }
+
+  private MultipartFile removeImports(final MultipartFile file) {
+    String c = "";;
+    try {
+      c = new PrePro().getWithoutImports(fileUpload(file, ServiceApp.tmp));
+    } catch (final FileNotFoundException e) {
       LOG.error(e.getLocalizedMessage(), e);
     }
-    throw new ResponseStatusException(//
-        HttpStatus.INTERNAL_SERVER_ERROR, //
-        "Could not handle request.");
+    return new MockMultipartFile(file.getName(), file.getName(), file.getContentType(),
+        c.getBytes());
   }
 
   /**
