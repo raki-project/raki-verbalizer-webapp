@@ -23,7 +23,7 @@ import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
 /**
- * Helper class to remove imported ontologies within an ontology since we don't want to verbalize
+ * Helper class to remove imported ontologies within an ontology, since we don't want to verbalize
  * those imports.
  *
  * @author rspeck
