@@ -15,7 +15,6 @@ import org.apache.logging.log4j.Logger;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
-import org.dice_research.raki.verbalizer.webapp.Const;
 
 /**
  * This class aims to provide information about the running service, e.g. versions, how to use the
@@ -36,7 +35,7 @@ public class InfoHandler {
    */
   public Set<Map<String, String>> ontology = new HashSet<>();
 
-  public InfoHandler() {
+  public InfoHandler(final String staticFolderOntology) {
     // initializes versions
     try {
       final MavenXpp3Reader reader = new MavenXpp3Reader();
@@ -46,12 +45,12 @@ public class InfoHandler {
       element.put("version", model.getVersion());
       version.add(element);
 
+      // initializes owl files
+      ontology.addAll(getFiles(staticFolderOntology));
+
     } catch (IOException | XmlPullParserException e) {
       LOG.error(e.getLocalizedMessage(), e);
     }
-
-    // initializes owl files
-    ontology.addAll(getFiles(Const.staticFilesFolderOntology));
   }
 
   /**
@@ -61,7 +60,6 @@ public class InfoHandler {
    */
   protected Set<Map<String, String>> getFiles(final String name) {
     final Set<Map<String, String>> ontology = new HashSet<>();
-    LOG.info(name);
     try {
       for (final File file : new File(getClass()//
           .getResource(name)//

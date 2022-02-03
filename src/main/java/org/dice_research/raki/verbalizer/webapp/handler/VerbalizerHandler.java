@@ -26,13 +26,14 @@ public class VerbalizerHandler {
   public VerbalizerHandler(final Path axioms, final Path ontology) {
     verbalizerResults = new VerbalizerResults();
     in = new RAKIInput();
+
     in.setAxioms(axioms).setOntology(ontology);
 
     out = new OutputJsonTrainingData();
     // out = new OutputTerminal();
   }
 
-  public VerbalizerResults getVerbalizerResults() {
+  protected VerbalizerResults getVerbalizerResults() {
     return verbalizerResults;
   }
 
@@ -46,11 +47,11 @@ public class VerbalizerHandler {
     return this;
   }
 
-  public VerbalizerHandler runsRules() {
-    return run(RAKIInput.Type.RULES);
+  public static VerbalizerResults getVerbalizerResults(final Path axioms, final Path ontology,
+      final RAKIInput.Type type) {
+    return new VerbalizerHandler(axioms, ontology)//
+        .run(type)//
+        .getVerbalizerResults();
   }
 
-  public VerbalizerHandler runsModel() {
-    return run(RAKIInput.Type.MODEL);
-  }
 }
