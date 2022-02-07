@@ -11,8 +11,13 @@ public class InfoController {
   @Value("${static.folder.ontology}")
   private String staticFolderOntology;
 
+  private InfoHandler infoHandler = null;
+
   @GetMapping("/info")
   public InfoHandler info() {
-    return new InfoHandler(staticFolderOntology);
+    if (infoHandler == null) {
+      infoHandler = new InfoHandler(staticFolderOntology);
+    }
+    return infoHandler;
   }
 }
