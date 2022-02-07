@@ -33,10 +33,6 @@ public class VerbalizerHandler {
     // out = new OutputTerminal();
   }
 
-  protected VerbalizerResults getVerbalizerResults() {
-    return verbalizerResults;
-  }
-
   protected VerbalizerHandler run(final RAKIInput.Type type) {
     in.setType(type);
     Pipeline.getInstance()//
@@ -45,6 +41,10 @@ public class VerbalizerHandler {
         .run();
     verbalizerResults.setResponse(out.getResults());
     return this;
+  }
+
+  protected VerbalizerResults getVerbalizerResults() {
+    return verbalizerResults;
   }
 
   public static VerbalizerResults getVerbalizerResults(final Path axioms, final Path ontology,
