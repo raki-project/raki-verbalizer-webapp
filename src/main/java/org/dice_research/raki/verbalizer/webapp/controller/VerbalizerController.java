@@ -1,7 +1,6 @@
 package org.dice_research.raki.verbalizer.webapp.controller;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.InputStreamReader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -18,7 +17,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.dice_research.raki.verbalizer.pipeline.data.input.IRAKIInput.Type;
 import org.dice_research.raki.verbalizer.pipeline.data.input.RAKIInput;
-import org.dice_research.raki.verbalizer.pipeline.io.RakiIO;
 import org.dice_research.raki.verbalizer.webapp.ServiceApp;
 import org.dice_research.raki.verbalizer.webapp.handler.VerbalizerHandler;
 import org.dice_research.raki.verbalizer.webapp.handler.VerbalizerResults;
@@ -26,6 +24,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.util.MimeTypeUtils;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -44,6 +44,12 @@ public class VerbalizerController {
   private InfoController infoController;
 
   private final MultipartFileHelper fileHelper = new MultipartFileHelper();
+
+  class ParametersVerbalizer {
+    Type type;
+    Path axioms;
+    Path ontology;
+  }
 
   @PostMapping("/feedback")
   public ResponseEntity<String> feedback(
@@ -104,37 +110,18 @@ public class VerbalizerController {
       @RequestParam(value = "ontologyName") final Optional<String> ontoName,
       @RequestParam(defaultValue = "rules") final String type) {
 
-    ParametersVerbalizer parameters = null;
+    if (inputExamples != null && !inputExamples.isEmpty()) {
 
-    String ontologyName = null;
-    MultipartFile ontology = null;
+      final String drillResponse = requestDrill(inputExamples);
+      if (drillResponse != null) {
 
-    if (onto != null && onto.isPresent()) {
-      ontology = onto.get();
-    } else if (ontoName != null && ontoName.isPresent()) {
-      ontologyName = ontoName.get();
-    }
+        final MultipartFile axioms = new MockMultipartFile(//
+            String.valueOf(new Timestamp(System.currentTimeMillis()).getTime()), //
+            null, //
+            MimeTypeUtils.APPLICATION_XML.getType(), //
+            drillResponse.getBytes());
 
-    if (!(ontologyName == null && ontology == null)) {
-      parameters = checksParams(inputExamples, ontology, ontologyName, type);
-      if (parameters != null) {
-
-        String drillResponse = requestDrill(inputExamples);
-
-        if (drillResponse != null) {
-          drillResponse = new PrePro().removeImports(drillResponse);
-
-          final Path path = Paths.get(ServiceApp.tmp.toFile().getAbsolutePath()//
-              .concat(File.separator)//
-              .concat(String.valueOf(new Timestamp(System.currentTimeMillis()).getTime()))//
-              .concat("_concept_learning"));//
-
-          RakiIO.write(path, drillResponse.getBytes());
-
-          return VerbalizerHandler.getVerbalizerResults(//
-              path, parameters.ontology, parameters.type//
-          );
-        }
+        return verbalizer(axioms, onto, ontoName, type);
       }
     }
     throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
@@ -171,12 +158,6 @@ public class VerbalizerController {
     return verbalizer(axioms, onto, ontoName, RAKIInput.Type.MODEL.name());
   }
 
-  class ParametersVerbalizer {
-    Type type;
-    Path axioms;
-    Path ontology;
-  }
-
   private ParametersVerbalizer checksParams(final MultipartFile axioms,
       final MultipartFile ontology, final String ontologyName, final String type) {
 
@@ -187,10 +168,9 @@ public class VerbalizerController {
         Arrays.asList(RAKIInput.Type.values())//
             .contains(RAKIInput.Type.valueOf(type))//
     ) {
-      if (ontology != null && !ontology.isEmpty()) {
-        final MultipartFile ontologyWithoutImports = fileHelper.removeImports(ontology);
-        p.ontology = fileHelper.fileUpload(ontologyWithoutImports, ServiceApp.tmp);
 
+      if (ontology != null && !ontology.isEmpty()) {
+        p.ontology = fileHelper.fileUpload(ontology, ServiceApp.tmp);
       } else if (ontologyName != null && !ontologyName.isEmpty()) {
         for (final Map<String, String> map : infoController.info().ontology) {
           if (map.get("name").equals(ontologyName)) {
@@ -201,7 +181,7 @@ public class VerbalizerController {
         return null;
       }
 
-      p.axioms = fileHelper.fileUpload(axioms, ServiceApp.tmp);
+      p.axioms = fileHelper.fileUpload(fileHelper.removeImports(axioms), ServiceApp.tmp);
       p.type = RAKIInput.Type.valueOf(type);
       return p;
     }
