@@ -161,30 +161,35 @@ public class VerbalizerController {
   private ParametersVerbalizer checksParams(final MultipartFile axioms,
       final MultipartFile ontology, final String ontologyName, final String type) {
 
-    final ParametersVerbalizer p = new ParametersVerbalizer();
+    try {
+      final ParametersVerbalizer p = new ParametersVerbalizer();
 
-    if (axioms != null && !axioms.isEmpty() && //
-        type != null && //
-        Arrays.asList(RAKIInput.Type.values())//
-            .contains(RAKIInput.Type.valueOf(type))//
-    ) {
+      if (axioms != null && !axioms.isEmpty() && //
+          type != null && //
+          Arrays.asList(RAKIInput.Type.values())//
+              .contains(RAKIInput.Type.valueOf(type.toUpperCase()))//
+      ) {
 
-      if (ontology != null && !ontology.isEmpty()) {
-        p.ontology = fileHelper.fileUpload(ontology, ServiceApp.tmp);
-      } else if (ontologyName != null && !ontologyName.isEmpty()) {
-        for (final Map<String, String> map : infoController.info().ontology) {
-          if (map.get("name").equals(ontologyName)) {
-            p.ontology = Paths.get(map.get("path"));
+        if (ontology != null && !ontology.isEmpty()) {
+          p.ontology = fileHelper.fileUpload(ontology, ServiceApp.tmp);
+        } else if (ontologyName != null && !ontologyName.isEmpty()) {
+          for (final Map<String, String> map : infoController.info().ontology) {
+            if (map.get("name").equals(ontologyName)) {
+              p.ontology = Paths.get(map.get("path"));
+            }
           }
+        } else {
+          return null;
         }
-      } else {
-        return null;
-      }
 
-      p.axioms = fileHelper.fileUpload(fileHelper.removeImports(axioms), ServiceApp.tmp);
-      p.type = RAKIInput.Type.valueOf(type);
-      return p;
+        p.axioms = fileHelper.fileUpload(fileHelper.removeImports(axioms), ServiceApp.tmp);
+        p.type = RAKIInput.Type.valueOf(type.toUpperCase());
+        return p;
+      }
+    } catch (final Exception e) {
+      LOG.error(e.getLocalizedMessage(), e);
     }
+
     return null;
   }
 
