@@ -105,37 +105,36 @@ public class VerbalizerController {
       @RequestParam(defaultValue = "rules") final String type) {
 
     ParametersVerbalizer parameters = null;
-    {
-      String ontologyName = null;
-      MultipartFile ontology = null;
-      if (onto.isPresent()) {
-        ontology = onto.get();
-      } else if (ontoName.isPresent()) {
-        ontologyName = ontoName.get();
-      } else {
-        throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-            "Some parameters are missing or wrong. Read the documentation.");
-      }
-      parameters = checksParams(inputExamples, ontology, ontologyName, type);
+
+    String ontologyName = null;
+    MultipartFile ontology = null;
+
+    if (onto != null && onto.isPresent()) {
+      ontology = onto.get();
+    } else if (ontoName != null && ontoName.isPresent()) {
+      ontologyName = ontoName.get();
     }
 
-    if (parameters != null) {
+    if (!(ontologyName == null && ontology == null)) {
+      parameters = checksParams(inputExamples, ontology, ontologyName, type);
+      if (parameters != null) {
 
-      String drillResponse = requestDrill(inputExamples);
+        String drillResponse = requestDrill(inputExamples);
 
-      if (drillResponse != null) {
-        drillResponse = new PrePro().removeImports(drillResponse);
+        if (drillResponse != null) {
+          drillResponse = new PrePro().removeImports(drillResponse);
 
-        final Path path = Paths.get(ServiceApp.tmp.toFile().getAbsolutePath()//
-            .concat(File.separator)//
-            .concat(String.valueOf(new Timestamp(System.currentTimeMillis()).getTime()))//
-            .concat("_concept_learning"));//
+          final Path path = Paths.get(ServiceApp.tmp.toFile().getAbsolutePath()//
+              .concat(File.separator)//
+              .concat(String.valueOf(new Timestamp(System.currentTimeMillis()).getTime()))//
+              .concat("_concept_learning"));//
 
-        RakiIO.write(path, drillResponse.getBytes());
+          RakiIO.write(path, drillResponse.getBytes());
 
-        return VerbalizerHandler.getVerbalizerResults(//
-            path, parameters.ontology, parameters.type//
-        );
+          return VerbalizerHandler.getVerbalizerResults(//
+              path, parameters.ontology, parameters.type//
+          );
+        }
       }
     }
     throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
