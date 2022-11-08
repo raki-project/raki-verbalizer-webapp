@@ -11,7 +11,7 @@
 	<groupId>org.dice-research</groupId>
 	<artifactId>raki-verbalizer-webapp</artifactId>
 	<version>0.0.2-SNAPSHOT</version>
-		<name>raki-verbalizer-webapp</name>
+	<name>raki-verbalizer-webapp</name>
 	<properties> 
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<java.version>1.8</java.version>
@@ -19,6 +19,7 @@
 		<maven.compiler.source>1.8</maven.compiler.source>
 		<maven.compiler.target>1.8</maven.compiler.target>
 		<ld2nl.version>0.4.2-SNAPSHOT</ld2nl.version>
+		<pipe.version>0.0.2-SNAPSHOT</pipe.version>
 	</properties>
 	<dependencies> 
 		<dependency>
@@ -65,9 +66,9 @@
 			</exclusions>
 		</dependency>
 		<dependency>
-			<groupId>de.raki-projekt</groupId>
+			<groupId>org.dice-research</groupId>
 			<artifactId>raki-verbalizer-pipeline</artifactId>
-			<version>0.0.2-SNAPSHOT</version>
+			<version>${pipe.version}</version>
 			<exclusions>
 				<exclusion>
 					<groupId>org.slf4j</groupId>
@@ -114,13 +115,31 @@
 			<artifactId>httpmime</artifactId>
 			<version>4.5.13</version>
 		</dependency>
-
+		<!-- https://mvnrepository.com/artifact/org.apache.xerces/xercesImpl -->
+		<dependency>
+				<groupId>org.apache.xerces</groupId>
+				<artifactId>xercesImpl</artifactId>
+				<version>2.11.0</version>
+				<scope>runtime</scope>
+		</dependency>
 	</dependencies>
 	<build>
 		<plugins>
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
+				<configuration>
+					<resources>
+						<resource>
+							<directory>src/main/resources</directory>
+						</resource>
+						<resource>
+							<directory>static</directory>
+							<targetPath>static</targetPath>
+						</resource>
+					</resources>
+					<addResources>true</addResources>
+				</configuration>
 			</plugin>
 		</plugins>
 	</build>
@@ -161,6 +180,17 @@
 			<id>spring-snapshots</id>
 			<name>Spring Snapshots</name>
 			<url>https://repo.spring.io/snapshot</url>
+			<releases>
+				<enabled>true</enabled>
+			</releases>
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
+		</repository>
+		<repository>
+			<id>Redhat EA Repository</id>
+			<name>Redhat EA Repository</name>
+			<url>https://maven.repository.redhat.com/earlyaccess/all/</url>
 			<releases>
 				<enabled>true</enabled>
 			</releases>

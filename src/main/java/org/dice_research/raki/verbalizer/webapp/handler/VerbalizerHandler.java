@@ -16,7 +16,6 @@ public class VerbalizerHandler {
 
   private VerbalizerResults verbalizerResults = null;
   private RAKIInput in = null;
-  private IOutput<JSONArray> out = null;
 
   /**
    *
@@ -24,27 +23,11 @@ public class VerbalizerHandler {
    * @param ontology
    */
   public VerbalizerHandler(final Path axioms, final Path ontology) {
-    verbalizerResults = new VerbalizerResults();
+
     in = new RAKIInput();
 
     in.setAxioms(axioms).setOntology(ontology);
 
-    out = new OutputJsonTrainingData();
-    // out = new OutputTerminal();
-  }
-
-  protected VerbalizerHandler run(final RAKIInput.Type type) {
-    in.setType(type);
-    Pipeline.getInstance()//
-        .setInput(in)//
-        .setOutput(out)//
-        .run();
-    verbalizerResults.setResponse(out.getResults());
-    return this;
-  }
-
-  protected VerbalizerResults getVerbalizerResults() {
-    return verbalizerResults;
   }
 
   public static VerbalizerResults getVerbalizerResults(final Path axioms, final Path ontology,
@@ -54,4 +37,23 @@ public class VerbalizerHandler {
         .getVerbalizerResults();
   }
 
+  protected VerbalizerHandler run(final RAKIInput.Type type) {
+    verbalizerResults = new VerbalizerResults();
+    final IOutput<JSONArray> out = new OutputJsonTrainingData();
+    // out = new OutputTerminal();
+
+    in.setType(type);
+
+    Pipeline.getInstance()//
+        .setInput(in)//
+        .setOutput(out)//
+        .run();
+
+    verbalizerResults.setResponse(out.getResults());
+    return this;
+  }
+
+  protected VerbalizerResults getVerbalizerResults() {
+    return verbalizerResults;
+  }
 }
